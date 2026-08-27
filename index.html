@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mood Investigator — Context AI</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 15% 8%,#26356e,transparent 34%),radial-gradient(circle at 88% 90%,#461b4d,transparent 32%),#070914;color:#f7f8ff;display:flex;align-items:center;justify-content:center}
+.app{width:min(850px,94vw);height:min(850px,94vh);display:flex;flex-direction:column;gap:11px}
+header{text-align:center}.badge{font-size:10px;letter-spacing:3px;color:#9bd7ff;font-weight:800}
+h1{font:700 clamp(29px,5.5vh,47px) Georgia,serif;margin:5px 0}h1 span{color:#8fdcff}
+header p{margin:0;color:#9298ad;font-size:13px}
+.card{flex:1;min-height:0;border:1px solid #ffffff16;border-radius:25px;background:linear-gradient(145deg,#151b31,#0c1020);box-shadow:0 25px 90px #0009;padding:clamp(18px,3.3vh,34px);display:flex;align-items:center;justify-content:center;text-align:center}
+.screen{width:100%;animation:in .45s ease}.hidden{display:none!important}
+.question{font:700 clamp(23px,3.8vh,31px) Georgia,serif;margin-bottom:8px}.sub{color:#858da2;font-size:13px;margin:0 auto 18px;max-width:650px}
+textarea{width:100%;max-width:700px;height:145px;resize:none;padding:18px;border-radius:15px;border:1px solid #343c55;background:#070b17;color:white;font:16px/1.5 Arial;outline:none}
+textarea:focus{border-color:#5cc8ff;box-shadow:0 0 0 4px #5cc8ff18}
+button{width:100%;max-width:700px;margin-top:12px;padding:15px;border:0;border-radius:13px;background:linear-gradient(100deg,#168dd2,#7c4dff);color:white;font-size:15px;font-weight:800;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+.thinking{display:flex;flex-direction:column;align-items:center;gap:16px}.orb{font-size:62px;animation:scan 1.4s infinite alternate}.dots{display:flex;gap:7px}.dots i{width:8px;height:8px;border-radius:50%;background:#72d5ff;animation:dot .7s infinite alternate}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}.thinking b{font-size:13px;color:#aab7cc}
+.result{width:100%;display:grid;gap:9px;max-height:100%;overflow:hidden}.result-top{font-size:48px;line-height:1;animation:pop .7s ease}.result h2{font:700 clamp(24px,3.6vh,32px) Georgia,serif;margin:0}.confidence{font-size:11px;color:#7f899e}.confidence strong{color:#d5ddeb}
+.block{max-width:680px;width:100%;margin:auto;text-align:left;background:#080b15;border:1px solid #ffffff0d;border-radius:13px;padding:10px 13px}.block-title{font-size:9px;letter-spacing:2px;color:#69758c;text-transform:uppercase;margin-bottom:5px}.block-value{font-size:13px;color:#dbe1ec;line-height:1.45}
+.emotions{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-width:680px;width:100%;margin:auto}.emotion{background:#080b15;border:1px solid #ffffff0d;border-radius:11px;padding:8px 10px;text-align:left}.emotion label{display:flex;justify-content:space-between;color:#a0aabd;font-size:10px;margin-bottom:5px}.emotion label b{color:#d9e0ed}.bar{height:6px;border-radius:99px;background:#171c2b;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5cc8ff,#a78bfa);border-radius:99px;transition:width 1.1s ease}
+.tags{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}.tag{padding:5px 8px;border-radius:99px;background:#ffffff08;border:1px solid #ffffff10;color:#cbd2df;font-size:10px}
+.again{background:#ffffff09;border:1px solid #ffffff12}.error{color:#ff9da8;font-size:12px;margin-top:7px}
+footer{text-align:center;color:#4b5368;font-size:10px}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes dot{to{transform:translateY(-7px);opacity:.4}}@keyframes scan{from{transform:scale(.9);filter:drop-shadow(0 0 4px #5cc8ff)}to{transform:scale(1.12);filter:drop-shadow(0 0 28px #5cc8ff)}}@keyframes pop{from{opacity:0;transform:scale(.3);filter:blur(8px)}60%{transform:scale(1.15)}to{opacity:1;transform:scale(1)}}
+@media(max-width:560px){.emotions{grid-template-columns:1fr}.card{padding:18px}textarea{height:125px}}
+</style>
+</head>
+<body>
+<main class="app">
+<header><div class="badge">✦ CONTEXT-AWARE MOOD INVESTIGATOR</div><h1>What's going on <span>inside?</span> 🕵️</h1><p>Don't just look for emotion words. Understand what happened, then infer the feeling.</p></header>
+<section class="card">
+<div id="inputScreen" class="screen">
+<div class="question">Tell me what happened.</div>
+<div class="sub">One sentence is enough. The investigator looks at context, meaning, and emotional signals.</div>
+<textarea id="text" maxlength="1500" placeholder="“I have lost my mobile.”"></textarea>
+<button id="investigate">Investigate my mood 🔍</button>
+<div id="inputError" class="error hidden"></div>
+</div>
+<div id="thinkingScreen" class="screen hidden"><div class="thinking"><div class="orb">🕵️</div><div class="dots"><i></i><i></i><i></i></div><b id="thinkingText">Understanding what happened…</b></div></div>
+<div id="resultScreen" class="screen hidden">
+<div class="result">
+<div class="result-top" id="emoji">💭</div>
+<h2 id="emotion">Your emotional signal</h2>
+<div class="confidence">AI confidence: <strong id="confidence">0%</strong></div>
+<div class="tags" id="tags"></div>
+<div class="block"><div class="block-title">What I understood</div><div class="block-value" id="situation"></div></div>
+<div class="emotions" id="emotions"></div>
+<div class="block"><div class="block-title">Investigator's observation</div><div class="block-value" id="observation"></div></div>
+<button class="again" onclick="location.reload()">Investigate another thought ↻</button>
+</div>
+</div>
+</section>
+<footer>AI interpretation of the text you provide — not a medical or psychological diagnosis.</footer>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>
