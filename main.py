@@ -2,12 +2,14 @@ import os
 from pathlib import Path
 
 import requests
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 MODEL = "facebook/bart-large-mnli"
 HF_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL}"
 
@@ -84,16 +86,32 @@ def hf_zero_shot(text, labels, multi_label=False):
         raise HTTPException(status_code=502, detail="Hugging Face returned an invalid response.")
 
 
+def prediction_pairs(result):
+    try:
+        if isinstance(result, list):
+            predictions = [(item["label"], float(item["score"])) for item in result]
+        elif isinstance(result, dict):
+            predictions = list(zip(result["labels"], map(float, result["scores"])))
+        else:
+            predictions = []
+    except (KeyError, TypeError, ValueError):
+        predictions = []
+
+    if not predictions:
+        raise HTTPException(status_code=502, detail="Hugging Face returned an unexpected classification response.")
+    return predictions
+
+
 def classify_situation(text):
     result = hf_zero_shot(text, SITUATIONS, multi_label=False)
-    return result["labels"][0], float(result["scores"][0])
+    return prediction_pairs(result)[0]
 
 
 def classify_emotions(text, situation):
     contextual_text = f"Situation understood: {situation}. Original sentence: {text}"
     result = hf_zero_shot(contextual_text, EMOTIONS, multi_label=True)
-    return [{"label": label, "score": float(score)}
-            for label, score in zip(result["labels"], result["scores"])]
+    return [{"label": label, "score": score}
+            for label, score in prediction_pairs(result)]
 
 
 def observation_for(emotion):

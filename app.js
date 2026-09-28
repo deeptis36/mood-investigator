@@ -7,7 +7,9 @@ $("investigate").onclick=async()=>{
  err.classList.add("hidden");$("investigate").disabled=true;$("inputScreen").classList.add("hidden");$("thinkingScreen").classList.remove("hidden");
  try{
   for(const s of ["Understanding what happened…","Looking beyond the literal words…","Connecting the situation to emotional signals…","Comparing possible feelings…"]){$("thinkingText").textContent=s;await wait(500)}
-  const r=await fetch("/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})}),d=await r.json();
+    const r=await fetch("/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+    const responseText=await r.text();let d;
+    try{d=responseText?JSON.parse(responseText):{}}catch{throw Error(r.ok?"The server returned an invalid response.":`Server error (${r.status}): ${responseText.slice(0,200)}`)}
   if(!r.ok)throw Error(d.detail||"Analysis failed");
   $("thinkingText").textContent="Investigation complete.";await wait(450);
   $("thinkingScreen").classList.add("hidden");$("resultScreen").classList.remove("hidden");
